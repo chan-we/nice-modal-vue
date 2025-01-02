@@ -1,9 +1,10 @@
 <template>
-  <NiceModalProvider>
+  <NiceModal.NiceModalProvider>
     <Test />
-  </NiceModalProvider>
+  </NiceModal.NiceModalProvider>
 </template>
 
 <script setup lang="ts">
+  import NiceModal from '../lib'
   import Test from './Test.vue'
 </script>

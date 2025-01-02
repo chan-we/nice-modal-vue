@@ -1,4 +1,18 @@
-import { App, defineComponent, Fragment, h, inject, provide, reactive, Reactive, Ref, ref, watch } from 'vue'
+import {
+  App,
+  defineComponent,
+  Fragment,
+  h,
+  inject,
+  nextTick,
+  onMounted,
+  provide,
+  reactive,
+  Reactive,
+  Ref,
+  ref,
+  watch,
+} from 'vue'
 import useReducer from './hooks/useReducer'
 import { showModal, setModalFlags } from './action'
 import {
@@ -105,8 +119,10 @@ export const unregister = (id: string): void => {
 const setFlags = (modalId: string, flags: Record<string, unknown>): void => {
   dispatch(setModalFlags(modalId, flags))
 }
-export function useModal(modal?: any, args?: any): any {
+export async function useModal(modal?: any, args?: any): Promise<any> {
+  await nextTick()
   const modals = inject<Reactive<NiceModalStore>>(NiceModalContext) || {}
+  console.log('useModal', modal)
   const contextModalId = inject<Ref<string>>(NiceModalIdContext)
   let modalId: string | null = null
   const isUseComponent = modal && typeof modal !== 'string'
@@ -129,7 +145,7 @@ export function useModal(modal?: any, args?: any): any {
     }
   })
 
-  const modalInfo = modals[mid];
+  const modalInfo = modals[mid]
 
   const showCallback = (args?: Record<string, unknown>) => show(mid, args)
   // const hideCallback = () => hide(mid)
@@ -169,6 +185,7 @@ export const NiceModalCreator = defineComponent({
     id: String,
   },
   setup(props, { slots }) {
+    console.log('NiceModalCreator')
     if (!props.id) {
       throw new Error('id is required')
     }
@@ -205,6 +222,7 @@ export const NiceModalCreator = defineComponent({
 
 const NiceModalPlaceholder = () => {
   const modals = inject<Reactive<NiceModalStore>>(NiceModalContext) || {}
+  console.log('placeholder', modals)
   const visibleModalIds = Object.keys(modals).filter((id) => !!modals[id])
   visibleModalIds.forEach((id) => {
     if (!MODAL_REGISTRY[id] && !ALREADY_MOUNTED[id]) {
@@ -279,32 +297,30 @@ const NiceModalProvider = defineComponent({
   name: 'NiceModalProvider',
   inheritAttrs: false,
   setup(_, { slots }) {
-    return () => {
-      const arr = useReducer(reducer, initialState)
+    const arr = useReducer(reducer, initialState)
 
-      const modals = arr[0]
-      dispatch = arr[1]
+    const modals = arr[0]
+    dispatch = arr[1]
 
-      provide(NiceModalContext, reactive(modals))
-
-      return (
-        <>
-          {slots.default?.()}
-          <NiceModalPlaceholder />
-        </>
-      )
-    }
+    provide(NiceModalContext, reactive(modals))
+    return () =>
+      h(Fragment, [
+        slots.default?.(),
+        <NiceModalPlaceholder />,
+        h('div', ['NiceModalProvider']), // TODO: remove
+      ])
   },
 })
 
-NiceModalProvider.install = (app: App) => {
-  app.component(NiceModalProvider.name as string, NiceModalProvider)
-}
+// NiceModalProvider.install = (app: App) => {
+//   app.component(NiceModalProvider.name as string, NiceModalProvider)
+// }
 
 const NiceModal = {
   register,
   unregister,
   NiceModalProvider,
+  NiceModalCreator,
   show,
 }
 
