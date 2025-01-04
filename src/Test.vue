@@ -7,7 +7,10 @@
   import { Button } from 'ant-design-vue'
   import NiceModal from '../lib'
   import DemoModal from './DemoModal.vue'
+
+  NiceModal.register('demo-modal', DemoModal)
+
   const showModal = () => {
-    NiceModal.show(DemoModal)
+    NiceModal.show('demo-modal')
   }
 </script>
