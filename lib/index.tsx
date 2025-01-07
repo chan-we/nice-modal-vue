@@ -14,6 +14,8 @@ import {
   ref,
   watch,
   getCurrentInstance,
+  toRefs,
+  unref,
 } from 'vue'
 import useReducer from './hooks/useReducer'
 import { showModal, setModalFlags, hideModal } from './action'
@@ -140,8 +142,6 @@ export function useModal(modal?: any, args?: any): any {
 
   const mid = modalId as string
 
-  console.log('useModal mid', mid)
-
   watch([isUseComponent, mid, modal, args], () => {
     if (isUseComponent && !MODAL_REGISTRY[mid]) {
       register(mid, modal as IComponent, args)
@@ -150,16 +150,7 @@ export function useModal(modal?: any, args?: any): any {
 
   const modalInfo = modals[mid]
 
-  // watch(
-  //   [() => modals[mid]],
-  //   (v) => {
-  //     console.log('watch', v)
-  //   },
-  //   { deep: true }
-  // )
-
   const showCallback = (args?: Record<string, unknown>) => {
-    console.log('callback sho')
     return show(mid, args)
   }
   const hideCallback = () => hide(mid)
@@ -201,45 +192,45 @@ export const NiceModalCreator = defineComponent({
     id: String,
   },
   setup(props, { slots }) {
-    const { defaultVisible, keepMounted, id, ...rest } = props
+    const { defaultVisible, keepMounted, id, ...rest } = toRefs(props)
 
-    console.log('NiceModalCreator')
-    if (!id) {
+    if (!unref(id)) {
       throw new Error('id is required')
     }
 
-    const { args, show } = useModal(id)
+    const { args, show } = useModal(unref(id))
 
     const modals = inject<Reactive<NiceModalStore>>(NiceModalContext) || {}
 
-    const shouldMount = !!modals[id as string]
+    const shouldMount = !!modals[unref(id) as string]
 
     watch(
-      [id, show, defaultVisible],
+      [id, defaultVisible],
       () => {
-        if (defaultVisible) {
-          console.log('defaultVisible sho')
+        if (unref(defaultVisible)) {
           show()
         }
-        console.log('ALREADY_MOUNTED', id)
-        ALREADY_MOUNTED[id as string] = true
+        ALREADY_MOUNTED[unref(id) as string] = true
       },
-      { deep: true }
+      { deep: true, immediate: true }
     )
 
     watch([id, keepMounted], () => {
       if (keepMounted) {
-        setFlags(id as string, { keepMounted: true })
+        setFlags(unref(id) as string, { keepMounted: true })
       }
     })
 
-    const delayVisible = modals[id]?.delayVisible
-    watch([delayVisible, args, show], () => {
-      if (delayVisible) {
-        console.log('delayVisible sho', defaultVisible)
-        show(args)
-      }
-    })
+    // const delayVisible = modals[id]?.delayVisible
+    watch(
+      [() => modals[unref(id) as string]?.delayVisible, args],
+      ([delayVisible]) => {
+        if (delayVisible) {
+          show(args)
+        }
+      },
+      { immediate: true }
+    )
 
     if (!shouldMount) return null
 
@@ -263,8 +254,6 @@ const NiceModalPlaceholder = () => {
     }
   })
 
-  console.log('placeholder', modals, visibleModalIds)
-
   const toRender = visibleModalIds
     .filter((id) => MODAL_REGISTRY[id])
     .map((id) => ({
@@ -275,7 +264,7 @@ const NiceModalPlaceholder = () => {
   return (
     <>
       {toRender.map((t) => (
-        <t.comp key={t.id} id={t.id} {...t.props} />
+        <t.comp key={JSON.stringify(modals)} id={t.id} {...t.props} />
       ))}
     </>
   )
@@ -304,7 +293,6 @@ export function show(modal: IComponent, args?: Record<string, unknown>) {
   if (typeof modal !== 'string' && !MODAL_REGISTRY[modalId]) {
     register(modalId, modal)
   }
-  console.log('dispatch(showModal(modalId, args))')
   dispatch(showModal(modalId, args))
   if (!modalCallbacks[modalId]) {
     // `!` tell ts that theResolve will be written before it is used

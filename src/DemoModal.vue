@@ -20,8 +20,16 @@
 
 <script setup lang="ts">
   import { Modal } from 'ant-design-vue'
+  import { watch } from 'vue';
   import NiceModal, { useModal } from '../lib'
 
   const modal = useModal()
-  console.log('DemoModal', modal)
+
+  watch(
+    modal,
+    () => {
+      console.log('DemoModal', modal)
+    },
+    { deep: true }
+  )
 </script>
