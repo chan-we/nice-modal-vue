@@ -16,6 +16,7 @@ import {
   getCurrentInstance,
   toRefs,
   unref,
+  computed,
 } from 'vue'
 import useReducer from './hooks/useReducer'
 import { showModal, setModalFlags, hideModal } from './action'
@@ -125,60 +126,64 @@ const setFlags = (modalId: string, flags: Record<string, unknown>): void => {
 export function useModal(modal?: any, args?: any): any {
   const modals = inject<Reactive<NiceModalStore>>(NiceModalContext) || {}
 
-  let modalId: string | null = null
+  let modalId = ref<string | null>(null)
   const isUseComponent = modal && typeof modal !== 'string'
 
   if (!modal) {
     const ctx = getCurrentInstance()
 
-    modalId = (ctx?.attrs?.id as string) || null
+    modalId.value = (ctx?.attrs?.id as string) || null
   } else {
-    modalId = getModalId(modal)
+    modalId.value = getModalId(modal)
   }
 
-  if (!modalId) {
+  if (!unref(modalId)) {
     throw new Error('No modal id found in NiceModal.useModal.')
   }
 
-  const mid = modalId as string
-
-  watch([isUseComponent, mid, modal, args], () => {
-    if (isUseComponent && !MODAL_REGISTRY[mid]) {
-      register(mid, modal as IComponent, args)
+  watch([modalId], () => {
+    if (isUseComponent && !MODAL_REGISTRY[unref(modalId) as string]) {
+      register(unref(modalId) as string, modal as IComponent, args)
     }
   })
 
-  const modalInfo = modals[mid]
-
   const showCallback = (args?: Record<string, unknown>) => {
-    return show(mid, args)
+    return show(unref(modalId), args)
   }
-  const hideCallback = () => hide(mid)
-  // const removeCallback = () => remove(mid)
+  const hideCallback = () => hide(unref(modalId))
   const resolveCallback = (args?: unknown) => {
-    modalCallbacks[mid]?.resolve(args)
-    delete modalCallbacks[mid]
+    modalCallbacks[unref(modalId) as string]?.resolve(args)
+    delete modalCallbacks[unref(modalId) as string]
   }
   const rejectCallback = (args?: unknown) => {
-    modalCallbacks[mid]?.reject(args)
-    delete modalCallbacks[mid]
+    modalCallbacks[unref(modalId) as string]?.reject(args)
+    delete modalCallbacks[unref(modalId) as string]
   }
-  // const resolveHide = (args?: unknown) => {
-  //   hideModalCallbacks[mid]?.resolve(args)
-  //   delete hideModalCallbacks[mid]
-  // }
+
+  const visible = ref(false)
+  const keepMounted = ref(false)
+  const modalArgs = ref()
+  watch(
+    modals,
+    () => {
+      const modal = modals[unref(modalId) as string]
+
+      visible.value = !!modal?.visible
+      modalArgs.value = modal?.args
+      keepMounted.value = !!modal?.keepMounted
+    },
+    { deep: true, immediate: true }
+  )
 
   const api = {
-    id: mid,
-    args: modalInfo?.args,
-    visible: !!modalInfo?.visible,
-    keepMounted: !!modalInfo?.keepMounted,
+    id: unref(modalId),
+    visible,
+    keepMounted,
+    args: modalArgs,
     show: showCallback,
     hide: hideCallback,
-    // remove: removeCallback,
     resolve: resolveCallback,
     reject: rejectCallback,
-    // resolveHide,
   }
 
   return api
@@ -264,7 +269,7 @@ const NiceModalPlaceholder = () => {
   return (
     <>
       {toRender.map((t) => (
-        <t.comp key={JSON.stringify(modals)} id={t.id} {...t.props} />
+        <t.comp key={t.id} id={t.id} {...t.props} />
       ))}
     </>
   )
@@ -346,18 +351,9 @@ const NiceModalProvider = defineComponent({
     dispatch = arr[1]
 
     provide(NiceModalContext, reactive(modals))
-    return () =>
-      h(Fragment, [
-        slots.default?.(),
-        <NiceModalPlaceholder />,
-        h('div', ['NiceModalProvider']), // TODO: remove
-      ])
+    return () => h(Fragment, [slots.default?.(), <NiceModalPlaceholder />])
   },
 })
-
-// NiceModalProvider.install = (app: App) => {
-//   app.component(NiceModalProvider.name as string, NiceModalProvider)
-// }
 
 const NiceModal = {
   register,

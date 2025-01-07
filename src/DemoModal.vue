@@ -2,15 +2,17 @@
   <NiceModal.NiceModalCreator>
     <Modal
       title="demo modal"
-      :open="modal.visible"
+      :open="visible"
       @ok="
         () => {
-          modal.hide()
+          hide()
+          // modal.hide()
         }
       "
       @cancel="
         () => {
-          modal.hide()
+          hide()
+          // modal.hide()
         }
       "
     ></Modal>
@@ -20,15 +22,16 @@
 
 <script setup lang="ts">
   import { Modal } from 'ant-design-vue'
-  import { watch } from 'vue';
+  import { isRef, watch } from 'vue'
   import NiceModal, { useModal } from '../lib'
 
-  const modal = useModal()
-
+  const { visible, hide } = useModal()
   watch(
-    modal,
+    visible,
     () => {
-      console.log('DemoModal', modal)
+      console.log(isRef(visible))
+
+      // console.log('DemoModal', modal)
     },
     { deep: true }
   )
