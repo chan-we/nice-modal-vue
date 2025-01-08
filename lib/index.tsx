@@ -11,9 +11,10 @@ import {
   getCurrentInstance,
   toRefs,
   unref,
+  nextTick,
 } from 'vue'
 import useReducer from './hooks/useReducer'
-import { showModal, setModalFlags, hideModal } from './action'
+import { showModal, setModalFlags, hideModal, removeModal } from './action'
 import {
   NiceModalCallbacks,
   NiceModalStore,
@@ -122,6 +123,13 @@ const setFlags = (modalId: string, flags: Record<string, unknown>): void => {
   dispatch(setModalFlags(modalId, flags))
 }
 
+export const remove = (modal: string | IComponent): void => {
+  const modalId = getModalId(modal)
+  dispatch(removeModal(modalId))
+  delete modalCallbacks[modalId]
+  delete hideModalCallbacks[modalId]
+}
+
 export function useModal(modal?: any, args?: any): any {
   const api = reactive<any>({})
   const modals = inject<Reactive<NiceModalStore>>(NiceModalContext) || {}
@@ -151,6 +159,10 @@ export function useModal(modal?: any, args?: any): any {
     return show(unref(modalId), args)
   }
   const hideCallback = () => hide(unref(modalId))
+  const removeCallback = () => {
+    remove(unref(modalId))
+  }
+
   const resolveCallback = (args?: unknown) => {
     modalCallbacks[unref(modalId) as string]?.resolve(args)
     delete modalCallbacks[unref(modalId) as string]
@@ -160,11 +172,19 @@ export function useModal(modal?: any, args?: any): any {
     delete modalCallbacks[unref(modalId) as string]
   }
 
+  const resolveHide = (args: unknown) => {
+    hideModalCallbacks[unref(modalId) as string]?.resolve(args)
+    console.log('hideModalCallbacks', hideModalCallbacks[unref(modalId) as string])
+    delete hideModalCallbacks[unref(modalId) as string]
+  }
+
   Object.assign(api, {
     show: showCallback,
     hide: hideCallback,
+    remove: removeCallback,
     resolve: resolveCallback,
     reject: rejectCallback,
+    resolveHide,
   })
 
   watch(
@@ -317,6 +337,7 @@ export function hide(modal: string | IComponent) {
   dispatch(hideModal(modalId))
   // Should also delete the callback for modal.resolve #35
   delete modalCallbacks[modalId]
+  console.log('hide', modalId, hideModalCallbacks);
   if (!hideModalCallbacks[modalId]) {
     // `!` tell ts that theResolve will be written before it is used
     let theResolve!: (args?: unknown) => void
@@ -365,7 +386,10 @@ export const antdModal = (
     afterClose: () => {
       // Need to resolve before remove
       modal.resolveHide()
-      if (!modal.keepMounted) modal.remove()
+      console.log('afterClose')
+      setTimeout(() => {
+        if (!modal.keepMounted) modal.remove()
+      }, 0)
     },
     ...modal.args,
   }

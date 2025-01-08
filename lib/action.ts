@@ -24,6 +24,15 @@ export function hideModal(modalId: string): NiceModalAction {
   };
 }
 
+export function removeModal(modalId: string): NiceModalAction {
+  return {
+    type: 'nice-modal/remove',
+    payload: {
+      modalId,
+    },
+  };
+}
+
 // action creator to set flags of a modal
 export function setModalFlags(
   modalId: string,
