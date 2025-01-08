@@ -24,5 +24,6 @@
   import NiceModal, { useModal, antdModalV4 } from '../lib'
 
   const modal = useModal()
+
   // const { visible, hide } = toRefs(useModal())
 </script>

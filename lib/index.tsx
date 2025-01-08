@@ -43,7 +43,7 @@ export const reducer = (
   state: NiceModalStore = initialState,
   action: NiceModalAction
 ): NiceModalStore => {
-  console.log(action.type)
+  console.log(action)
   switch (action.type) {
     case 'nice-modal/show': {
       const { modalId, args } = action.payload
@@ -174,7 +174,7 @@ export function useModal(modal?: any, args?: any): any {
 
       Object.assign(api, {
         visible: !!modal?.visible,
-        modalArgs: modal?.args,
+        args: modal?.args,
         keepMounted: !!modal?.keepMounted,
       })
     },
@@ -237,7 +237,7 @@ export const NiceModalCreator = defineComponent({
     provide(NiceModalIdContext, ref(id))
 
     return () => {
-      return h(Fragment, [slots.default?.({ ...rest, ...args })])
+      return <>{slots.default?.({ ...rest, ...args })}</>
     }
   },
 })
@@ -367,6 +367,7 @@ export const antdModal = (
       modal.resolveHide()
       if (!modal.keepMounted) modal.remove()
     },
+    ...modal.args,
   }
 }
 
@@ -380,6 +381,7 @@ export const antdModalV4 = (modal: NiceModalHandler) => {
     onOk,
     onCancel,
     afterClose,
+    ...modal.args,
   }
 }
 

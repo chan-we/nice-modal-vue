@@ -15,6 +15,9 @@
   const localOpen = ref(false)
 
   const showModal = () => {
-    NiceModal.show('demo-modal')
+    NiceModal.show('demo-modal', {
+      title: 'custom title modal',
+      okText: '确定'
+    })
   }
 </script>
