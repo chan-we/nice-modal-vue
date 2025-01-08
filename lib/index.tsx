@@ -1,26 +1,25 @@
 import {
-  App,
   defineComponent,
   Fragment,
   h,
   inject,
-  nextTick,
-  onMounted,
-  defineExpose,
   provide,
   reactive,
   Reactive,
-  Ref,
   ref,
   watch,
   getCurrentInstance,
   toRefs,
   unref,
-  computed,
 } from 'vue'
 import useReducer from './hooks/useReducer'
 import { showModal, setModalFlags, hideModal } from './action'
-import { NiceModalCallbacks, NiceModalStore, NiceModalAction } from './types'
+import {
+  NiceModalCallbacks,
+  NiceModalStore,
+  NiceModalAction,
+  NiceModalHandler,
+} from './types'
 
 type IComponent = ReturnType<typeof defineComponent>
 
@@ -124,6 +123,7 @@ const setFlags = (modalId: string, flags: Record<string, unknown>): void => {
 }
 
 export function useModal(modal?: any, args?: any): any {
+  const api = reactive<any>({})
   const modals = inject<Reactive<NiceModalStore>>(NiceModalContext) || {}
 
   let modalId = ref<string | null>(null)
@@ -160,31 +160,26 @@ export function useModal(modal?: any, args?: any): any {
     delete modalCallbacks[unref(modalId) as string]
   }
 
-  const visible = ref(false)
-  const keepMounted = ref(false)
-  const modalArgs = ref()
+  Object.assign(api, {
+    show: showCallback,
+    hide: hideCallback,
+    resolve: resolveCallback,
+    reject: rejectCallback,
+  })
+
   watch(
     modals,
     () => {
       const modal = modals[unref(modalId) as string]
 
-      visible.value = !!modal?.visible
-      modalArgs.value = modal?.args
-      keepMounted.value = !!modal?.keepMounted
+      Object.assign(api, {
+        visible: !!modal?.visible,
+        modalArgs: modal?.args,
+        keepMounted: !!modal?.keepMounted,
+      })
     },
     { deep: true, immediate: true }
   )
-
-  const api = {
-    id: unref(modalId),
-    visible,
-    keepMounted,
-    args: modalArgs,
-    show: showCallback,
-    hide: hideCallback,
-    resolve: resolveCallback,
-    reject: rejectCallback,
-  }
 
   return api
 }
@@ -354,6 +349,39 @@ const NiceModalProvider = defineComponent({
     return () => h(Fragment, [slots.default?.(), <NiceModalPlaceholder />])
   },
 })
+
+export const antdModal = (
+  modal: NiceModalHandler
+): {
+  visible: boolean
+  onCancel: () => void
+  onOk: () => void
+  afterClose: () => void
+} => {
+  return {
+    visible: modal.visible,
+    onOk: () => modal.hide(),
+    onCancel: () => modal.hide(),
+    afterClose: () => {
+      // Need to resolve before remove
+      modal.resolveHide()
+      if (!modal.keepMounted) modal.remove()
+    },
+  }
+}
+
+/**
+ * 适用于ant-design-vue@4
+ */
+export const antdModalV4 = (modal: NiceModalHandler) => {
+  const { onOk, onCancel, afterClose } = antdModal(modal)
+  return {
+    open: modal.visible,
+    onOk,
+    onCancel,
+    afterClose,
+  }
+}
 
 const NiceModal = {
   register,
