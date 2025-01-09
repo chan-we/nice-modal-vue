@@ -21,7 +21,9 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
 
-    "jsx": "preserve"
+    "jsx": "preserve",
+    "jsxFragmentFactory": "Fragment",
+    "jsxFactory": "h"
   },
   "include": ["lib/**/*"],
   "exclude": ["node_modules", "dist"]
