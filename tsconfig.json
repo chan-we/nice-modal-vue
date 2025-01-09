@@ -22,6 +22,6 @@
 
     "jsx": "preserve"
   },
-  "include": ["src/**/*", "lib/**/*"],
+  "include": ["lib/**/*"],
   "exclude": ["node_modules", "dist"]
 }

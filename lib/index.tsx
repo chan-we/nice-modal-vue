@@ -253,7 +253,7 @@ export const NiceModalCreator = defineComponent({
     provide(NiceModalIdContext, ref(id))
 
     return () => {
-      return <>{slots.default?.({ ...rest, ...args })}</>
+      return h(Fragment, [slots.default?.({ ...rest, ...args })])
     }
   },
 })
@@ -277,13 +277,9 @@ const NiceModalPlaceholder = () => {
       ...MODAL_REGISTRY[id],
     }))
 
-  return (
-    <>
-      {toRender.map((t) => (
-        <t.comp key={t.id} id={t.id} {...t.props} />
-      ))}
-    </>
-  )
+  return h(Fragment, [
+    toRender.map((t) => <t.comp key={t.id} id={t.id} {...t.props} />),
+  ])
 }
 
 const getModalId = (modal: string | IComponent): string => {
