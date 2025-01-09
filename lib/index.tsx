@@ -11,7 +11,6 @@ import {
   getCurrentInstance,
   toRefs,
   unref,
-  nextTick,
 } from 'vue'
 import useReducer from './hooks/useReducer'
 import { showModal, setModalFlags, hideModal, removeModal } from './action'
@@ -39,12 +38,10 @@ let dispatch: any = () => {
 }
 const getUid = () => `_nice_modal_${uidSeed++}`
 
-// Modal reducer used in useReducer hook.
 export const reducer = (
   state: NiceModalStore = initialState,
   action: NiceModalAction
 ): NiceModalStore => {
-  console.log(action)
   switch (action.type) {
     case 'nice-modal/show': {
       const { modalId, args } = action.payload
@@ -174,7 +171,6 @@ export function useModal(modal?: any, args?: any): any {
 
   const resolveHide = (args: unknown) => {
     hideModalCallbacks[unref(modalId) as string]?.resolve(args)
-    console.log('hideModalCallbacks', hideModalCallbacks[unref(modalId) as string])
     delete hideModalCallbacks[unref(modalId) as string]
   }
 
@@ -300,14 +296,6 @@ const getModalId = (modal: string | IComponent): string => {
   return modal[symModalId]
 }
 
-// export function show<T extends any>(
-//   modal: string,
-//   args?: Record<string, unknown>
-// ): Promise<T>
-// export function show<T extends any, P extends any>(
-//   modal: string,
-//   args: P
-// ): Promise<T>
 export function show(modal: IComponent, args?: Record<string, unknown>) {
   const modalId = getModalId(modal)
   if (typeof modal !== 'string' && !MODAL_REGISTRY[modalId]) {
@@ -335,13 +323,9 @@ export function show(modal: IComponent, args?: Record<string, unknown>) {
 export function hide(modal: string | IComponent) {
   const modalId = getModalId(modal)
   dispatch(hideModal(modalId))
-  // Should also delete the callback for modal.resolve #35
   delete modalCallbacks[modalId]
-  console.log('hide', modalId, hideModalCallbacks);
   if (!hideModalCallbacks[modalId]) {
-    // `!` tell ts that theResolve will be written before it is used
     let theResolve!: (args?: unknown) => void
-    // `!` tell ts that theResolve will be written before it is used
     let theReject!: (args?: unknown) => void
     const promise = new Promise((resolve, reject) => {
       theResolve = resolve
@@ -384,9 +368,7 @@ export const antdModal = (
     onOk: () => modal.hide(),
     onCancel: () => modal.hide(),
     afterClose: () => {
-      // Need to resolve before remove
       modal.resolveHide()
-      console.log('afterClose')
       setTimeout(() => {
         if (!modal.keepMounted) modal.remove()
       }, 0)

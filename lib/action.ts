@@ -1,6 +1,5 @@
 import { NiceModalAction } from './types'
 
-// action creator to show a modal
 export function showModal(
   modalId: string,
   args?: Record<string, unknown>
@@ -14,7 +13,6 @@ export function showModal(
   }
 }
 
-// action creator to hide a modal
 export function hideModal(modalId: string): NiceModalAction {
   return {
     type: 'nice-modal/hide',
@@ -33,7 +31,6 @@ export function removeModal(modalId: string): NiceModalAction {
   };
 }
 
-// action creator to set flags of a modal
 export function setModalFlags(
   modalId: string,
   flags: Record<string, unknown>
