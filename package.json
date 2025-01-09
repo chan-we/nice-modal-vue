@@ -1,7 +1,6 @@
 {
   "name": "nice-modal-vue",
-  "private": false,
-  "version": "0.0.1-alpha1",
+  "version": "0.0.1-alpha4",
   "type": "module",
   "files": [
     "dist"
@@ -9,13 +8,9 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   },
-  "main": "./dist/counter.umd.cjs",
-  "module": "./dist/counter.js",
-  "types": "./index.d.ts",
+  "types": "./dist/index.d.ts",
   "exports": {
-    "types": "./index.d.ts",
-    "import": "./dist/counter.js",
-    "require": "./dist/counter.umd.cjs"
+    "types": "./dist/index.d.ts"
   },
   "scripts": {
     "dev": "vite",
@@ -28,6 +23,7 @@
     "ant-design-vue": "^4.2.6",
     "typescript": "~5.7.2",
     "vite": "^6.0.1",
+    "vite-plugin-dts": "^4.4.0",
     "vue": "^3.5.13"
   }
 }
