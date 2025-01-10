@@ -10,7 +10,6 @@ export default defineConfig({
       formats: ['es', 'cjs'],
       fileName: (format) => `index.${format}.js`,
     },
-    minify: false,
     rollupOptions: {
       external: ['vue'],
       output: {
