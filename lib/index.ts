@@ -34,7 +34,7 @@ const hideModalCallbacks: NiceModalCallbacks = {}
 let uidSeed = 0
 let dispatch: any = () => {
   throw new Error(
-    'No dispatch method detected, did you embed your app with NiceModalProvider?'
+    '错误。请用NiceModalProvider包裹应用'
   )
 }
 const getUid = () => `_nice_modal_${uidSeed++}`
@@ -144,7 +144,7 @@ export function useModal(modal?: any, args?: any): any {
   }
 
   if (!unref(modalId)) {
-    throw new Error('No modal id found in NiceModal.useModal.')
+    throw new Error('useModal未获取到modal.id')
   }
 
   watch([modalId], () => {
@@ -212,7 +212,7 @@ export const NiceModalCreator = defineComponent({
     const { defaultVisible, keepMounted, id, ...rest } = toRefs(props)
 
     if (!unref(id)) {
-      throw new Error('id is required')
+      throw new Error('缺少id字段')
     }
 
     const { args, show } = useModal(unref(id))
@@ -280,7 +280,7 @@ export const NiceModalPlaceholder = defineComponent({
       visibleModalIds.forEach((id) => {
         if (!MODAL_REGISTRY[id] && !ALREADY_MOUNTED[id]) {
           console.warn(
-            `No modal found for id: ${id}. Please check the id or if it is registered or declared via JSX.`
+            `找不到id为 ${id} 的弹窗，请检查是否已注册弹窗。`
           )
           return
         }
