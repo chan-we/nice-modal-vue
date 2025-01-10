@@ -11,6 +11,7 @@ import {
   getCurrentInstance,
   toRefs,
   unref,
+  computed,
 } from 'vue'
 import useReducer from './hooks/useReducer'
 import { showModal, setModalFlags, hideModal, removeModal } from './action'
@@ -259,34 +260,49 @@ export const NiceModalCreator = defineComponent({
 })
 
 export const NiceModalPlaceholder = defineComponent({
+  name: 'NiceModalPlaceholder',
   setup() {
-    const modals = inject<Reactive<NiceModalStore>>(NiceModalContext) || {}
-    const visibleModalIds = Object.keys(modals).filter((id) => !!modals[id])
-    visibleModalIds.forEach((id) => {
-      if (!MODAL_REGISTRY[id] && !ALREADY_MOUNTED[id]) {
-        console.warn(
-          `No modal found for id: ${id}. Please check the id or if it is registered or declared via JSX.`
-        )
-        return
-      }
+    const modals = reactive<Record<string, any>>({})
+    Object.assign(modals, inject<Reactive<NiceModalStore>>(NiceModalContext))
+    const remoteModals =
+      inject<Reactive<NiceModalStore>>(NiceModalContext) || reactive({})
+
+    watch(
+      remoteModals,
+      (v) => {
+        Object.assign(modals, v)
+      },
+      { deep: true, immediate: true }
+    )
+
+    const renderList = computed(() => {
+      const visibleModalIds = Object.keys(modals).filter((id) => !!modals[id])
+      visibleModalIds.forEach((id) => {
+        if (!MODAL_REGISTRY[id] && !ALREADY_MOUNTED[id]) {
+          console.warn(
+            `No modal found for id: ${id}. Please check the id or if it is registered or declared via JSX.`
+          )
+          return
+        }
+      })
+
+      const toRender = visibleModalIds
+        .filter((id) => MODAL_REGISTRY[id])
+        .map((id) => ({
+          id,
+          ...MODAL_REGISTRY[id],
+        }))
+
+      return toRender.map((t) =>
+        h(t.comp, {
+          key: t.id,
+          id: t.id,
+          ...(t.props || {}),
+        })
+      )
     })
 
-    const toRender = visibleModalIds
-      .filter((id) => MODAL_REGISTRY[id])
-      .map((id) => ({
-        id,
-        ...MODAL_REGISTRY[id],
-      }))
-    return () =>
-      h(Fragment, [
-        ...toRender.map((t) =>
-          h(t.comp, {
-            key: t.id,
-            id: t.id,
-            ...(t.props || {}),
-          })
-        ),
-      ])
+    return () => h(Fragment, [...unref(renderList)])
   },
 })
 
@@ -349,13 +365,12 @@ export const NiceModalProvider = defineComponent({
   name: 'NiceModalProvider',
   inheritAttrs: false,
   setup(_, { slots }) {
-    console.log('NiceModalProvider')
     const arr = useReducer(reducer, initialState)
 
-    const modals = arr[0]
+    const modals = reactive(arr[0])
     dispatch = arr[1]
 
-    provide(NiceModalContext, reactive(modals))
+    provide(NiceModalContext, modals)
     return () => h(Fragment, [slots.default?.(), h(NiceModalPlaceholder)])
   },
 })

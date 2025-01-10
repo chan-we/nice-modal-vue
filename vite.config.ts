@@ -12,11 +12,10 @@ export default defineConfig({
     },
     minify: false,
     rollupOptions: {
-      // 确保外部化处理 Vue，不打包进库中
       external: ['vue'],
       output: {
         globals: {
-          vue: 'Vue', // UMD 全局变量
+          vue: 'Vue',
         },
       },
     },
