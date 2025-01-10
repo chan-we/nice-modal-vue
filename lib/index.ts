@@ -258,29 +258,37 @@ export const NiceModalCreator = defineComponent({
   },
 })
 
-const NiceModalPlaceholder = () => {
-  const modals = inject<Reactive<NiceModalStore>>(NiceModalContext) || {}
-  const visibleModalIds = Object.keys(modals).filter((id) => !!modals[id])
-  visibleModalIds.forEach((id) => {
-    if (!MODAL_REGISTRY[id] && !ALREADY_MOUNTED[id]) {
-      console.warn(
-        `No modal found for id: ${id}. Please check the id or if it is registered or declared via JSX.`
-      )
-      return
-    }
-  })
+export const NiceModalPlaceholder = defineComponent({
+  setup() {
+    const modals = inject<Reactive<NiceModalStore>>(NiceModalContext) || {}
+    const visibleModalIds = Object.keys(modals).filter((id) => !!modals[id])
+    visibleModalIds.forEach((id) => {
+      if (!MODAL_REGISTRY[id] && !ALREADY_MOUNTED[id]) {
+        console.warn(
+          `No modal found for id: ${id}. Please check the id or if it is registered or declared via JSX.`
+        )
+        return
+      }
+    })
 
-  const toRender = visibleModalIds
-    .filter((id) => MODAL_REGISTRY[id])
-    .map((id) => ({
-      id,
-      ...MODAL_REGISTRY[id],
-    }))
-
-  return h(Fragment, [
-    toRender.map((t) => <t.comp key={t.id} id={t.id} {...t.props} />),
-  ])
-}
+    const toRender = visibleModalIds
+      .filter((id) => MODAL_REGISTRY[id])
+      .map((id) => ({
+        id,
+        ...MODAL_REGISTRY[id],
+      }))
+    return () =>
+      h(Fragment, [
+        ...toRender.map((t) =>
+          h(t.comp, {
+            key: t.id,
+            id: t.id,
+            ...(t.props || {}),
+          })
+        ),
+      ])
+  },
+})
 
 const getModalId = (modal: string | IComponent): string => {
   if (typeof modal === 'string') {
@@ -336,18 +344,19 @@ export function hide(modal: string | IComponent) {
   return hideModalCallbacks[modalId].promise
 }
 
-const NiceModalProvider = defineComponent({
-  compatConfig: { MODE: 3 },
+export const NiceModalProvider = defineComponent({
+  // compatConfig: { MODE: 3 },
   name: 'NiceModalProvider',
   inheritAttrs: false,
   setup(_, { slots }) {
+    console.log('NiceModalProvider')
     const arr = useReducer(reducer, initialState)
 
     const modals = arr[0]
     dispatch = arr[1]
 
     provide(NiceModalContext, reactive(modals))
-    return () => h(Fragment, [slots.default?.(), <NiceModalPlaceholder />])
+    return () => h(Fragment, [slots.default?.(), h(NiceModalPlaceholder)])
   },
 })
 
@@ -386,13 +395,3 @@ export const antdModalV4 = (modal: NiceModalHandler) => {
     ...modal.args,
   }
 }
-
-const NiceModal = {
-  register,
-  unregister,
-  NiceModalProvider,
-  NiceModalCreator,
-  show,
-}
-
-export default NiceModal

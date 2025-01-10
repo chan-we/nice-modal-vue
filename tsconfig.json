@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "declaration": true,
+    "declarationDir": "./dist/types",
     "outDir": "./dist",
 
     "target": "ES2020",
