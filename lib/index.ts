@@ -15,12 +15,8 @@ import {
 } from 'vue'
 import useReducer from './hooks/useReducer'
 import { showModal, setModalFlags, hideModal, removeModal } from './action'
-import {
-  NiceModalCallbacks,
-  NiceModalStore,
-  NiceModalAction,
-  NiceModalHandler,
-} from './types'
+import { NiceModalCallbacks, NiceModalStore, NiceModalAction } from './types'
+export * from './help-fn'
 
 type IComponent = ReturnType<typeof defineComponent>
 
@@ -33,9 +29,7 @@ const hideModalCallbacks: NiceModalCallbacks = {}
 
 let uidSeed = 0
 let dispatch: any = () => {
-  throw new Error(
-    '错误。请用NiceModalProvider包裹应用'
-  )
+  throw new Error('错误。请用NiceModalProvider包裹应用')
 }
 const getUid = () => `_nice_modal_${uidSeed++}`
 
@@ -238,7 +232,6 @@ export const NiceModalCreator = defineComponent({
       }
     })
 
-    // const delayVisible = modals[id]?.delayVisible
     watch(
       [() => modals[unref(id) as string]?.delayVisible, args],
       ([delayVisible]) => {
@@ -279,9 +272,7 @@ export const NiceModalPlaceholder = defineComponent({
       const visibleModalIds = Object.keys(modals).filter((id) => !!modals[id])
       visibleModalIds.forEach((id) => {
         if (!MODAL_REGISTRY[id] && !ALREADY_MOUNTED[id]) {
-          console.warn(
-            `找不到id为 ${id} 的弹窗，请检查是否已注册弹窗。`
-          )
+          console.warn(`找不到id为 ${id} 的弹窗，请检查是否已注册弹窗。`)
           return
         }
       })
@@ -374,39 +365,3 @@ export const NiceModalProvider = defineComponent({
     return () => h(Fragment, [slots.default?.(), h(NiceModalPlaceholder)])
   },
 })
-
-export const antdModal = (
-  modal: NiceModalHandler
-): {
-  visible: boolean
-  onCancel: () => void
-  onOk: () => void
-  afterClose: () => void
-} => {
-  return {
-    visible: modal.visible,
-    onOk: () => modal.hide(),
-    onCancel: () => modal.hide(),
-    afterClose: () => {
-      modal.resolveHide()
-      setTimeout(() => {
-        if (!modal.keepMounted) modal.remove()
-      }, 0)
-    },
-    ...modal.args,
-  }
-}
-
-/**
- * 适用于ant-design-vue@4
- */
-export const antdModalV4 = (modal: NiceModalHandler) => {
-  const { onOk, onCancel, afterClose } = antdModal(modal)
-  return {
-    open: modal.visible,
-    onOk,
-    onCancel,
-    afterClose,
-    ...modal.args,
-  }
-}
