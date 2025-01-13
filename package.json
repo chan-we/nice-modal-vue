@@ -1,6 +1,6 @@
 {
   "name": "nice-modal-vue",
-  "version": "0.0.1",
+  "version": "0.0.1-alpha7",
   "type": "module",
   "files": [
     "dist"
