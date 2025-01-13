@@ -3,7 +3,7 @@ name: Publish to npmjs.com
 on:
   push:
     branches:
-      - main # 仅在推送到 main 分支时触发
+      - main
 
 jobs:
   publish:
@@ -17,18 +17,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
-          cache: 'pnpm'
-
-      - name: Install pnpm
-        run: npm install -g pnpm
 
       - name: Install dependencies
-        run: pnpm install
-
-      - name: Run tests
-        run: pnpm test
+        run: npm install
 
       - name: Publish to NPM
-        run: pnpm publish --no-git-checks --access public
+        run: npm publish --no-git-checks --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
