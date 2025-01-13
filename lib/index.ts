@@ -255,18 +255,10 @@ export const NiceModalCreator = defineComponent({
 export const NiceModalPlaceholder = defineComponent({
   name: 'NiceModalPlaceholder',
   setup() {
-    const modals = reactive<Record<string, any>>({})
-    Object.assign(modals, inject<Reactive<NiceModalStore>>(NiceModalContext))
-    const remoteModals =
-      inject<Reactive<NiceModalStore>>(NiceModalContext) || reactive({})
-
-    watch(
-      remoteModals,
-      (v) => {
-        Object.assign(modals, v)
-      },
-      { deep: true, immediate: true }
-    )
+    const modals = inject<Reactive<NiceModalStore>>(NiceModalContext)
+    if (!modals) {
+      throw new Error('获取弹窗数据失败')
+    }
 
     const renderList = computed(() => {
       const visibleModalIds = Object.keys(modals).filter((id) => !!modals[id])
