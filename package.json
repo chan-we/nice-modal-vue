@@ -1,10 +1,11 @@
 {
   "name": "nice-modal-vue",
-  "version": "0.0.1-alpha6",
+  "version": "0.0.1",
   "type": "module",
   "files": [
     "dist"
   ],
+  "repository": "https://github.com/chan-we/nice-modal-vue",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   },
