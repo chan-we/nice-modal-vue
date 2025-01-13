@@ -15,7 +15,12 @@ import {
 } from 'vue'
 import useReducer from './hooks/useReducer'
 import { showModal, setModalFlags, hideModal, removeModal } from './action'
-import { NiceModalCallbacks, NiceModalStore, NiceModalAction } from './types'
+import {
+  NiceModalCallbacks,
+  NiceModalStore,
+  NiceModalAction,
+  NiceModalHandler,
+} from './types'
 export * from './help-fn'
 
 type IComponent = ReturnType<typeof defineComponent>
@@ -46,9 +51,6 @@ export const reducer = (
           ...state[modalId],
           id: modalId,
           args,
-          // If modal is not mounted, mount it first then make it visible.
-          // There is logic inside HOC wrapper to make it visible after its first mount.
-          // This mechanism ensures the entering transition.
           visible: !!ALREADY_MOUNTED[modalId],
           delayVisible: !ALREADY_MOUNTED[modalId],
         },
@@ -92,7 +94,7 @@ const MODAL_REGISTRY: {
     props?: Record<string, unknown>
   }
 } = {}
-const ALREADY_MOUNTED: Record<string, any> = {}
+const ALREADY_MOUNTED: Record<string, boolean> = {}
 const modalCallbacks: NiceModalCallbacks = {}
 
 export const register = <T extends IComponent>(
@@ -122,8 +124,7 @@ export const remove = (modal: string | IComponent): void => {
   delete hideModalCallbacks[modalId]
 }
 
-export function useModal(modal?: any, args?: any): any {
-  const api = reactive<any>({})
+export function useModal(modal?: any, args?: any): NiceModalHandler {
   const modals = inject<Reactive<NiceModalStore>>(NiceModalContext) || {}
 
   let modalId = ref<string | null>(null)
@@ -169,13 +170,17 @@ export function useModal(modal?: any, args?: any): any {
     delete hideModalCallbacks[unref(modalId) as string]
   }
 
-  Object.assign(api, {
+  const api = reactive<NiceModalHandler>({
     show: showCallback,
     hide: hideCallback,
     remove: removeCallback,
     resolve: resolveCallback,
     reject: rejectCallback,
     resolveHide,
+    visible: false,
+    keepMounted: false,
+    args: {},
+    id: '',
   })
 
   watch(
@@ -187,6 +192,7 @@ export function useModal(modal?: any, args?: any): any {
         visible: !!modal?.visible,
         args: modal?.args,
         keepMounted: !!modal?.keepMounted,
+        id: unref(modalId),
       })
     },
     { deep: true, immediate: true }

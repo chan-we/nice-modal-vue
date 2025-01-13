@@ -48,6 +48,7 @@
   import { Modal } from 'ant-design-vue'
 
   const modal = useModal()
+  // 或者 const { visible, hide } = toRefs(useModal())
 </script>
 ```
 
