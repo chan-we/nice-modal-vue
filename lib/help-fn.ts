@@ -1,7 +1,8 @@
 import { NiceModalHandler } from './types'
 
 export const antdModal = (
-  modal: NiceModalHandler
+  modal: NiceModalHandler,
+  props?: Record<string, any>
 ): {
   visible: boolean
   onCancel: () => void
@@ -19,6 +20,7 @@ export const antdModal = (
       }, 0)
     },
     ...modal.args,
+    ...props,
   }
 }
 
@@ -26,7 +28,10 @@ export const antdModal = (
  * 适用于ant-design-vue@4 Modal组件
  * @see https://antdv.com/components/modal
  */
-export const antdModalV4 = (modal: NiceModalHandler) => {
+export const antdModalV4 = (
+  modal: NiceModalHandler,
+  props?: Record<string, any>
+) => {
   const { onOk, onCancel, afterClose } = antdModal(modal)
   return {
     open: modal.visible,
@@ -34,10 +39,14 @@ export const antdModalV4 = (modal: NiceModalHandler) => {
     onCancel,
     afterClose,
     ...modal.args,
+    ...props,
   }
 }
 
-export const antdDrawerV4 = (modal: NiceModalHandler) => {
+export const antdDrawerV4 = (
+  modal: NiceModalHandler,
+  props?: Record<string, any>
+) => {
   const { afterClose } = antdModal(modal)
   return {
     open: modal.visible,
@@ -50,10 +59,14 @@ export const antdDrawerV4 = (modal: NiceModalHandler) => {
       }
     },
     ...modal.args,
+    ...props,
   }
 }
 
-export const elementDialog = (modal: NiceModalHandler) => {
+export const elementDialog = (
+  modal: NiceModalHandler,
+  props?: Record<string, any>
+) => {
   return {
     modelValue: modal.visible,
     onClosed: () => {
@@ -62,7 +75,12 @@ export const elementDialog = (modal: NiceModalHandler) => {
         if (!modal.keepMounted) modal.remove()
       }, 0)
     },
+    ...modal.args,
+    ...props,
   }
 }
 
-export const elementDrawer = (modal: NiceModalHandler) => elementDialog(modal)
+export const elementDrawer = (
+  modal: NiceModalHandler,
+  props?: Record<string, any>
+) => elementDialog(modal, props)
