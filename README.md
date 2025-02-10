@@ -11,6 +11,7 @@
 # 用法
 
 ## 注册弹窗
+
 首先用`<NiceModalProvider>`包裹项目
 
 ```html
@@ -57,6 +58,7 @@
 上面这个组件无法在`<template>`中直接使用。
 
 ## 唤起弹窗
+
 使用`register`方法注册函数后，就可以使用`show`方法展示弹窗了。
 
 ```html
@@ -82,7 +84,8 @@
 </script>
 ```
 
-## props传递
+## props 传递
+
 `show`方法第二个参数可以传递`props`给弹窗，如果弹窗要读取`props`。需要对组件做调整
 
 ```html
@@ -119,7 +122,8 @@
 <!-- DemoModal.vue -->
 <template>
   <NiceModalCreator>
-    <Modal v-bind="antdModalV4(modal)"></Modal>
+    <!-- 第二个参数是可选的，用于覆盖帮助方法提供的属性 -->
+    <Modal v-bind="antdModalV4(modal, { onOk })"></Modal>
   </NiceModalCreator>
 </template>
 
@@ -128,6 +132,10 @@
   import { Modal } from 'ant-design-vue'
 
   const modal = useModal()
+
+  const onOk = () => {
+    console.log('ok')
+    modal.hide()
+  }
 </script>
 ```
-
